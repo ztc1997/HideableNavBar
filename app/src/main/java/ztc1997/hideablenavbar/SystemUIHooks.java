@@ -26,10 +26,15 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import ztc1997.hideablenavbar.View.KeyButtonView;
 
+import static ztc1997.hideablenavbar.BuildConfig.DEBUG;
+
 public class SystemUIHooks {
+    public static final String TAG = SystemUIHooks.class.getSimpleName() + ": ";
+
     private static View sNavBar;
 
     public static void doHook(ClassLoader loader) {
@@ -49,8 +54,20 @@ public class SystemUIHooks {
                 navBtnsRot0.removeViewAt(0);
                 navBtnsRot90.removeViewAt(navBtnsRot90.getChildCount() - 1);
 
-                int navigationSidePadding = res.getDimensionPixelOffset(res.getIdentifier("navigation_side_padding", "dimen", XposedInit.PACKAGE_SYSTEMUI));
-                int navigationExtraKeyWidth = res.getDimensionPixelOffset(res.getIdentifier("navigation_extra_key_width", "dimen", XposedInit.PACKAGE_SYSTEMUI));
+                final float scale = sNavBar.getContext().getResources().getDisplayMetrics().density;
+                int navigationSidePadding = (int) (40 * scale);
+                int navigationExtraKeyWidth = (int) (36 * scale);
+
+                try {
+                    navigationSidePadding = res.getDimensionPixelOffset(res.getIdentifier("navigation_side_padding", "dimen", XposedInit.PACKAGE_SYSTEMUI));
+                } catch (Resources.NotFoundException e) {
+                    if (DEBUG) XposedBridge.log(TAG + e);
+                }
+                try {
+                    navigationExtraKeyWidth = res.getDimensionPixelOffset(res.getIdentifier("navigation_extra_key_width", "dimen", XposedInit.PACKAGE_SYSTEMUI));
+                } catch (Resources.NotFoundException e) {
+                    if (DEBUG) XposedBridge.log(TAG + e);
+                }
 
                 FrameLayout hideNavContainer0 = new FrameLayout(sNavBar.getContext());
                 hideNavContainer0.setLayoutParams(new LinearLayout.LayoutParams(navigationSidePadding, ViewGroup.LayoutParams.MATCH_PARENT));
