@@ -21,17 +21,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.view.MotionEvent;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 
+import static de.robv.android.xposed.XposedBridge.log;
+
 public class PhoneWindowManagerHooks {
+    public static final String TAG = PhoneWindowManagerHooks.class.getSimpleName() + ": ";
     public static final String ACTION_HIDE_NAV_BAR = "ztc1997.hideablenavbar.PhoneWindowManagerHooks.action.HIDE_NAV_BAR";
+
+    public static GesturesListener sGesturesListener;
 
     private static int sNavBarWp, sNavBarHp,sNavBarHl;
     private static Object sPhoneWindowManager;
     private static Context sContext;
+
     private static BroadcastReceiver sHideNavBarReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -51,6 +56,7 @@ public class PhoneWindowManagerHooks {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         super.afterHookedMethod(param);
+                        log(TAG + XposedHelpers.getObjectField(param.thisObject, "mWindowManagerFuncs").getClass().getName());
                         sPhoneWindowManager = param.thisObject;
                         sContext = (Context) XposedHelpers.getObjectField(sPhoneWindowManager, "mContext");
                         Resources res = sContext.getResources();
@@ -65,37 +71,50 @@ public class PhoneWindowManagerHooks {
                         sNavBarHl = res.getDimensionPixelSize(resHeightLandscapeId);
 
                         sContext.registerReceiver(sHideNavBarReceiver, new IntentFilter(ACTION_HIDE_NAV_BAR));
+
+                        sGesturesListener = new GesturesListener(sContext, new GesturesListener.Callbacks() {
+                            @Override
+                            public void onSwipeFromTop() {
+
+                            }
+
+                            @Override
+                            public void onSwipeFromBottom() {
+                                if (XposedHelpers.getBooleanField(sPhoneWindowManager, "mNavigationBarOnBottom"))
+                                    showNavBar();
+                            }
+
+                            @Override
+                            public void onSwipeFromRight() {
+                                if (!XposedHelpers.getBooleanField(sPhoneWindowManager, "mNavigationBarOnBottom"))
+                                    showNavBar();
+                            }
+
+                            @Override
+                            public void onDebug() {
+
+                            }
+                        });
                     }
                 }
         );
 
-        final String CLASS_SYSTEM_GESTURES_POINTER_EVENT_LISTENER = "com.android.internal.policy.impl.SystemGesturesPointerEventListener";
-        XposedHelpers.findAndHookMethod(CLASS_SYSTEM_GESTURES_POINTER_EVENT_LISTENER, null, "onPointerEvent", MotionEvent.class, new XC_MethodHook() {
+        final String CLASS_WINDOW_STATE = "android.view.WindowManagerPolicy$WindowState";
+        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "layoutWindowLw", CLASS_WINDOW_STATE, CLASS_WINDOW_STATE, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 super.afterHookedMethod(param);
-                final MotionEvent event = (MotionEvent) param.args[0];
-                if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    switch ((int) XposedHelpers.callMethod(param.thisObject, "detectSwipe", event)) {
-                        case 2:
-                            if (XposedHelpers.getBooleanField(sPhoneWindowManager, "mNavigationBarOnBottom"))
-                                showNavBar();
-                            break;
-                        case 3:
-                            if (!XposedHelpers.getBooleanField(sPhoneWindowManager, "mNavigationBarOnBottom"))
-                                showNavBar();
-                            break;
-                    }
-                }
+                sGesturesListener.screenWidth = XposedHelpers.getIntField(param.thisObject, "mUnrestrictedScreenWidth");
+                sGesturesListener.screenHeight = XposedHelpers.getIntField(param.thisObject, "mUnrestrictedScreenHeight");
             }
         });
     }
 
-    private static void showNavBar() {
+    public static void showNavBar() {
         setNavBarDimensions(sNavBarWp, sNavBarHp, sNavBarHl);
     }
 
-    private static void hideNavBar() {
+    public static void hideNavBar() {
         setNavBarDimensions(0, 0, 0);
     }
 
@@ -108,6 +127,10 @@ public class PhoneWindowManagerHooks {
         final int upsideDownRotation = XposedHelpers.getIntField(sPhoneWindowManager, "mUpsideDownRotation");
         final int landscapeRotation = XposedHelpers.getIntField(sPhoneWindowManager, "mLandscapeRotation");
         final int seascapeRotation = XposedHelpers.getIntField(sPhoneWindowManager, "mSeascapeRotation");
+        if (navigationBarHeightForRotation[portraitRotation] == hp && navigationBarHeightForRotation[landscapeRotation] == hl
+                && navigationBarWidthForRotation[portraitRotation] == wp && navigationBarWidthForRotation[landscapeRotation] == wp)
+            return;
+
         navigationBarHeightForRotation[portraitRotation] =
                 navigationBarHeightForRotation[upsideDownRotation] =
                         hp;
@@ -121,5 +144,10 @@ public class PhoneWindowManagerHooks {
                                 navigationBarWidthForRotation[seascapeRotation] =
                                         wp;
         XposedHelpers.callMethod(sPhoneWindowManager, "updateRotation", false);
+    }
+
+    public static void sendNavBarHideIntent(Context context) {
+        Intent intent = new Intent(PhoneWindowManagerHooks.ACTION_HIDE_NAV_BAR);
+        context.sendBroadcast(intent);
     }
 }

@@ -16,7 +16,6 @@
 
 package ztc1997.hideablenavbar;
 
-import android.content.Intent;
 import android.content.res.Resources;
 import android.view.Surface;
 import android.view.View;
@@ -26,10 +25,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import ztc1997.hideablenavbar.View.KeyButtonView;
 
+import static de.robv.android.xposed.XposedBridge.log;
 import static ztc1997.hideablenavbar.BuildConfig.DEBUG;
 
 public class SystemUIHooks {
@@ -61,19 +60,19 @@ public class SystemUIHooks {
                 try {
                     navigationSidePadding = res.getDimensionPixelOffset(res.getIdentifier("navigation_side_padding", "dimen", XposedInit.PACKAGE_SYSTEMUI));
                 } catch (Resources.NotFoundException e) {
-                    if (DEBUG) XposedBridge.log(TAG + e);
+                    if (DEBUG) log(TAG + e);
                 }
                 try {
                     navigationExtraKeyWidth = res.getDimensionPixelOffset(res.getIdentifier("navigation_extra_key_width", "dimen", XposedInit.PACKAGE_SYSTEMUI));
                 } catch (Resources.NotFoundException e) {
-                    if (DEBUG) XposedBridge.log(TAG + e);
+                    if (DEBUG) log(TAG + e);
                 }
 
                 FrameLayout hideNavContainer0 = new FrameLayout(sNavBar.getContext());
                 hideNavContainer0.setLayoutParams(new LinearLayout.LayoutParams(navigationSidePadding, ViewGroup.LayoutParams.MATCH_PARENT));
                 ImageView hideNavBtn0 = new KeyButtonView(sNavBar.getContext());
                 hideNavBtn0.setLayoutParams(new ViewGroup.LayoutParams(navigationExtraKeyWidth, ViewGroup.LayoutParams.MATCH_PARENT));
-                hideNavBtn0.setImageResource(XposedInit.getHideIconId());
+                hideNavBtn0.setImageResource(XposedInit.getIcHideId());
                 hideNavBtn0.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 hideNavBtn0.setOnClickListener(onHideNavBtnClickListener);
                 hideNavContainer0.addView(hideNavBtn0);
@@ -83,7 +82,7 @@ public class SystemUIHooks {
                 hideNavContainer90.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, navigationSidePadding));
                 ImageView hideNavBtn90 = new KeyButtonView(sNavBar.getContext());
                 hideNavBtn90.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, navigationExtraKeyWidth));
-                hideNavBtn90.setImageResource(XposedInit.getHideIconLandIdId());
+                hideNavBtn90.setImageResource(XposedInit.getIcHideLandIdId());
                 hideNavBtn90.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 hideNavBtn90.setOnClickListener(onHideNavBtnClickListener);
                 hideNavContainer90.addView(hideNavBtn90);
@@ -96,8 +95,7 @@ public class SystemUIHooks {
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(PhoneWindowManagerHooks.ACTION_HIDE_NAV_BAR);
-            sNavBar.getContext().sendBroadcast(intent);
+            PhoneWindowManagerHooks.sendNavBarHideIntent(sNavBar.getContext());
         }
     };
 }

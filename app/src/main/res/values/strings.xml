@@ -17,4 +17,5 @@
 <resources>
     <string name="app_name">Hideable Nav Bar</string>
     <string name="description">Port Huawei hideable navigation bar for others use.</string>
+  <string name="navbar_menu_hide">Hide Nav Bar</string>
 </resources>

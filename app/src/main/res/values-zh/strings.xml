@@ -18,4 +18,5 @@
 <resources>
     <string name="app_name">可隐藏导航栏</string>
   <string name="description">将华为的可隐藏导航栏移植到其他设备上</string>
+  <string name="display_hide">隐藏导航栏</string>
 </resources>

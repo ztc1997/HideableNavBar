@@ -20,42 +20,81 @@ import android.content.res.XModuleResources;
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
+import static de.robv.android.xposed.XposedBridge.log;
+
 public class XposedInit implements IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitPackageResources {
+    public static final String TAG = XposedInit.class.getSimpleName() + ": ";
     public static final String PACKAGE_SYSTEMUI = "com.android.systemui";
 
-    private static String MODULE_PATH = null;
-    private static int HIDE_ICON_ID;
+    private static String MODULE_PATH;
 
-    public static int getHideIconId() {
-        return HIDE_ICON_ID;
+    private static int IC_HIDE_ID;
+    public static int getIcHideId() {
+        return IC_HIDE_ID;
     }
-    private static int HIDE_ICON_LAND_ID;
 
-    public static int getHideIconLandIdId() {
-        return HIDE_ICON_LAND_ID;
+    private static int IC_HIDE_LAND_ID;
+    public static int getIcHideLandIdId() {
+        return IC_HIDE_LAND_ID;
+    }
+
+    private static int STRING_NAV_HIDE_ID;
+    public static int getStringNavHideId() {
+        return STRING_NAV_HIDE_ID;
     }
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        PhoneWindowManagerHooks.doHook();
+        XposedBridge.log("Hideable Nav Bar: Version = " + BuildConfig.VERSION_CODE);
+        try {
+            PhoneWindowManagerHooks.doHook();
+        } catch (Exception e) {
+            log(TAG + e);
+        }
         MODULE_PATH = startupParam.modulePath;
     }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        if (lpparam.packageName.equals(PACKAGE_SYSTEMUI))
-                SystemUIHooks.doHook(lpparam.classLoader);
+        switch (lpparam.packageName) {
+            case PACKAGE_SYSTEMUI:
+                try {
+                    SystemUIHooks.doHook(lpparam.classLoader);
+                } catch (Exception e) {
+                    log(TAG + e);
+                }
+
+                try {
+                    CmSystemUIHooks.doHook(lpparam.classLoader);
+                } catch (Exception e) {
+                    log(TAG + e);
+                }
+                break;
+            case "android":
+                try {
+                    PointerEventDispatcherHooks.doHook(lpparam.classLoader);
+                } catch (Exception e) {
+                    log(TAG + e);
+                }
+                break;
+        }
     }
 
     @Override
     public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam liparam) throws Throwable {
         if (liparam.packageName.equals(PACKAGE_SYSTEMUI)) {
-            XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, liparam.res);
-            HIDE_ICON_ID = liparam.res.addResource(modRes, R.mipmap.ic_sysbar_hide);
-            HIDE_ICON_LAND_ID = liparam.res.addResource(modRes, R.mipmap.ic_sysbar_hide_land);
+            try {
+                XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, liparam.res);
+                IC_HIDE_ID = liparam.res.addResource(modRes, R.mipmap.ic_sysbar_hide);
+                IC_HIDE_LAND_ID = liparam.res.addResource(modRes, R.mipmap.ic_sysbar_hide_land);
+                STRING_NAV_HIDE_ID = liparam.res.addResource(modRes, R.string.navbar_menu_hide);
+            } catch (Exception e) {
+                log(TAG + e);
+            }
         }
     }
 }
