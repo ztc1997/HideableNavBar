@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ztc1997.hideablenavbar;
+package ztc1997.hideablenavbar.hooks;
 
 import android.content.res.Resources;
 import android.view.Surface;
@@ -26,7 +26,8 @@ import android.widget.LinearLayout;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
-import ztc1997.hideablenavbar.View.KeyButtonView;
+import ztc1997.hideablenavbar.XposedInit;
+import ztc1997.hideablenavbar.view.KeyButtonView;
 
 import static de.robv.android.xposed.XposedBridge.log;
 import static ztc1997.hideablenavbar.BuildConfig.DEBUG;

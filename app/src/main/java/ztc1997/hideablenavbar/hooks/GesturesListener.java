@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package ztc1997.hideablenavbar;
+package ztc1997.hideablenavbar.hooks;
 
 import android.content.Context;
 import android.content.res.Resources;

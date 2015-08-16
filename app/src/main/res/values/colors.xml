@@ -16,10 +16,6 @@
   -->
 
 <resources>
-    <string name="app_name">可隐藏导航栏</string>
-  <string name="description">将华为的可隐藏导航栏移植到其他设备上</string>
-  <string name="display_hide">隐藏导航栏</string>
-  <string name="hide_icon_title">隐藏图标</string>
-  <string name="show_icon_title">显示图标</string>
-  <string name="msg_module_no_activated">模块似乎没有被正确激活</string>
+    <color name="colorPrimary">#f39800</color>
+    <color name="colorPrimaryDark">#c27a00</color>
 </resources>

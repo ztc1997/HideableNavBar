@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2015. Alex Zhang aka. ztc1997
+  ~ Copyright 2015 Alex Zhang aka. ztc1997
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -17,8 +17,28 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light">
+    <style name="AppTheme" parent="AppTheme.Base">
         <!-- Customize your theme here. -->
+    </style>
+    
+    <style name="AppTheme.Base" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:toolbarStyle">@style/AppTheme.Base.ToolBar</item>
+        <item name="android:colorPrimary">@color/colorPrimary</item>
+        <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <item name="android:colorAccent">@color/colorPrimary</item>
+    </style>
+
+    <style name="AppTheme.Base.ToolBar" parent="@android:style/Widget.Material.Toolbar">
+        <item name="android:titleTextAppearance">@style/AppTheme.Base.ToolBar.TitleTextAppearance</item>
+    </style>
+
+    <style name="AppTheme.Base.ToolBar.TitleTextAppearance" parent="@android:style/TextAppearance.Medium">
+    <item name="android:textColor">@android:color/primary_text_dark</item>
+</style>
+
+    <style name="MyToolBarStyle" parent="AppTheme.Base">
+        <item name="android:textColorSecondary">@android:color/white</item>
     </style>
 
 </resources>

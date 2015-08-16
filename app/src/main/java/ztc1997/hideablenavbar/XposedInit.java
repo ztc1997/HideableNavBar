@@ -20,9 +20,15 @@ import android.content.res.XModuleResources;
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
+import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import ztc1997.hideablenavbar.hooks.CmSystemUIHooks;
+import ztc1997.hideablenavbar.hooks.PhoneWindowManagerHooks;
+import ztc1997.hideablenavbar.hooks.PointerEventDispatcherHooks;
+import ztc1997.hideablenavbar.hooks.SystemUIHooks;
 
 import static de.robv.android.xposed.XposedBridge.log;
 
@@ -77,6 +83,15 @@ public class XposedInit implements IXposedHookLoadPackage, IXposedHookZygoteInit
             case "android":
                 try {
                     PointerEventDispatcherHooks.doHook(lpparam.classLoader);
+                } catch (Exception e) {
+                    log(TAG + e);
+                }
+                break;
+
+            case BuildConfig.APPLICATION_ID:
+                try {
+                    XposedHelpers.findAndHookMethod(SettingsActivity.class.getName(), lpparam.classLoader,
+                            "activatedModuleVersion", XC_MethodReplacement.returnConstant(BuildConfig.VERSION_CODE));
                 } catch (Exception e) {
                     log(TAG + e);
                 }

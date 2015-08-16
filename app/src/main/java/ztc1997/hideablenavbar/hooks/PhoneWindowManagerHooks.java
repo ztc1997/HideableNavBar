@@ -14,39 +14,58 @@
  * limitations under the License.
  */
 
-package ztc1997.hideablenavbar;
+package ztc1997.hideablenavbar.hooks;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.view.Display;
 
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedHelpers;
+import ztc1997.hideablenavbar.BuildConfig;
+import ztc1997.hideablenavbar.SettingsActivity;
 
 import static de.robv.android.xposed.XposedBridge.log;
 
 public class PhoneWindowManagerHooks {
     public static final String TAG = PhoneWindowManagerHooks.class.getSimpleName() + ": ";
-    public static final String ACTION_HIDE_NAV_BAR = "ztc1997.hideablenavbar.PhoneWindowManagerHooks.action.HIDE_NAV_BAR";
+    public static final String ACTION_HIDE_NAV_BAR = "ztc1997.hideablenavbar.hooks.PhoneWindowManagerHooks.action.HIDE_NAV_BAR";
 
     public static GesturesListener sGesturesListener;
 
-    private static int sNavBarWp, sNavBarHp,sNavBarHl;
+    private static int sNavBarWp, sNavBarHp,sNavBarHl, sNavBarWpOrigin, sNavBarHpOrigin,sNavBarHlOrigin;
     private static Object sPhoneWindowManager;
     private static Context sContext;
 
     private static BroadcastReceiver sHideNavBarReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(ACTION_HIDE_NAV_BAR)) {
-                hideNavBar();
+            switch (intent.getAction()) {
+                case ACTION_HIDE_NAV_BAR:
+                    hideNavBar();
+                    break;
+
+                case SettingsActivity.ACTION_PREF_CHANGED:
+                    if (intent.hasExtra(SettingsActivity.PREF_NAVBAR_WIDTH))
+                        sNavBarWp = (int) ((float) sNavBarWpOrigin * intent.getIntExtra(SettingsActivity.PREF_NAVBAR_WIDTH, sNavBarWp) / 100);
+                    if (intent.hasExtra(SettingsActivity.PREF_NAVBAR_HEIGHT_PORT))
+                        sNavBarHp = (int) ((float) sNavBarHpOrigin * intent.getIntExtra(SettingsActivity.PREF_NAVBAR_HEIGHT_PORT, sNavBarHp) / 100);
+                    if (intent.hasExtra(SettingsActivity.PREF_NAVBAR_HEIGHT_LAND))
+                        sNavBarHl = (int) ((float) sNavBarHlOrigin * intent.getIntExtra(SettingsActivity.PREF_NAVBAR_HEIGHT_LAND, sNavBarHl) / 100);
+
+                    showNavBar();
+                    break;
             }
         }
     };
 
     public static void doHook() {
+        final XSharedPreferences preferences = new XSharedPreferences(BuildConfig.APPLICATION_ID);
+
         final String CLASS_PHONE_WINDOW_MANAGER = "com.android.internal.policy.impl.PhoneWindowManager";
         final String CLASS_IWINDOW_MANAGER = "android.view.IWindowManager";
         final String CLASS_WINDOW_MANAGER_FUNCS = "android.view.WindowManagerPolicy.WindowManagerFuncs";
@@ -66,11 +85,18 @@ public class PhoneWindowManagerHooks {
                                 "navigation_bar_height", "dimen", "android");
                         int resHeightLandscapeId = res.getIdentifier(
                                 "navigation_bar_height_landscape", "dimen", "android");
-                        sNavBarWp = res.getDimensionPixelSize(resWidthId);
-                        sNavBarHp = res.getDimensionPixelSize(resHeightId);
-                        sNavBarHl = res.getDimensionPixelSize(resHeightLandscapeId);
+                        sNavBarWpOrigin = res.getDimensionPixelSize(resWidthId);
+                        sNavBarHpOrigin = res.getDimensionPixelSize(resHeightId);
+                        sNavBarHlOrigin = res.getDimensionPixelSize(resHeightLandscapeId);
 
-                        sContext.registerReceiver(sHideNavBarReceiver, new IntentFilter(ACTION_HIDE_NAV_BAR));
+                        sNavBarWp = (int) ((float) sNavBarWpOrigin * preferences.getInt(SettingsActivity.PREF_NAVBAR_WIDTH, 100) / 100);
+                        sNavBarHp = (int) ((float) sNavBarHpOrigin * preferences.getInt(SettingsActivity.PREF_NAVBAR_HEIGHT_PORT, 100) / 100);
+                        sNavBarHl = (int) ((float) sNavBarHlOrigin * preferences.getInt(SettingsActivity.PREF_NAVBAR_HEIGHT_LAND, 100) / 100);
+
+                        IntentFilter intentFilter = new IntentFilter();
+                        intentFilter.addAction(ACTION_HIDE_NAV_BAR);
+                        intentFilter.addAction(SettingsActivity.ACTION_PREF_CHANGED);
+                        sContext.registerReceiver(sHideNavBarReceiver, intentFilter);
 
                         sGesturesListener = new GesturesListener(sContext, new GesturesListener.Callbacks() {
                             @Override
@@ -98,6 +124,15 @@ public class PhoneWindowManagerHooks {
                     }
                 }
         );
+
+        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "setInitialDisplaySize",
+                Display.class, int.class, int.class, int.class, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                super.afterHookedMethod(param);
+                showNavBar();
+            }
+        });
 
         final String CLASS_WINDOW_STATE = "android.view.WindowManagerPolicy$WindowState";
         XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "layoutWindowLw", CLASS_WINDOW_STATE, CLASS_WINDOW_STATE, new XC_MethodHook() {

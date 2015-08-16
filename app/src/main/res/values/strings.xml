@@ -15,7 +15,13 @@
   -->
 
 <resources>
-    <string name="app_name">Hideable Nav Bar</string>
-    <string name="description">Port Huawei hideable navigation bar for others use.</string>
+  <string name="app_name">Hideable Nav Bar</string>
+  <string name="description">Port Huawei hideable navigation bar for others use.</string>
   <string name="navbar_menu_hide">Hide Nav Bar</string>
+  <string name="hide_icon_title">Hide Icon</string>
+  <string name="show_icon_title">Show Icon</string>
+  <string name="msg_module_no_activated">It seems the module is not activated properly.</string>
+  <string name="navbar_height_port_title">Navigation bar height (portrait)</string>
+  <string name="navbar_height_land_title">Navigation bar height (landscape)</string>
+  <string name="navbar_width_title">Navigation bar width</string>
 </resources>

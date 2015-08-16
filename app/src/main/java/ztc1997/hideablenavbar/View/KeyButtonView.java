@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package ztc1997.hideablenavbar.View;
+package ztc1997.hideablenavbar.view;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;

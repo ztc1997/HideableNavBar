@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ztc1997.hideablenavbar;
+package ztc1997.hideablenavbar.hooks;
 
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,6 +23,7 @@ import java.lang.reflect.Array;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
+import ztc1997.hideablenavbar.XposedInit;
 
 public class CmSystemUIHooks {
     public static final String TAG = CmSystemUIHooks.class.getSimpleName() + ": ";
