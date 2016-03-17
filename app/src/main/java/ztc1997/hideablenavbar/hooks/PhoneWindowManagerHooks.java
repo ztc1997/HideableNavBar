@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.os.Build;
 import android.view.Display;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -37,7 +38,7 @@ public class PhoneWindowManagerHooks {
 
     public static GesturesListener sGesturesListener;
 
-    private static int sNavBarWp, sNavBarHp,sNavBarHl, sNavBarWpOrigin, sNavBarHpOrigin,sNavBarHlOrigin;
+    private static int sNavBarWp, sNavBarHp, sNavBarHl, sNavBarWpOrigin, sNavBarHpOrigin, sNavBarHlOrigin;
     private static Object sPhoneWindowManager;
     private static Context sContext;
 
@@ -63,14 +64,16 @@ public class PhoneWindowManagerHooks {
         }
     };
 
-    public static void doHook() {
+    public static void doHook(ClassLoader loader) {
         final XSharedPreferences preferences = new XSharedPreferences(BuildConfig.APPLICATION_ID);
 
-        final String CLASS_PHONE_WINDOW_MANAGER = "com.android.internal.policy.impl.PhoneWindowManager";
+        final String CLASS_PHONE_WINDOW_MANAGER = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ?
+                "com.android.internal.policy.impl.PhoneWindowManager" :
+                "com.android.server.policy.PhoneWindowManager";
         final String CLASS_IWINDOW_MANAGER = "android.view.IWindowManager";
         final String CLASS_WINDOW_MANAGER_FUNCS = "android.view.WindowManagerPolicy.WindowManagerFuncs";
 
-        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "init",
+        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, loader, "init",
                 Context.class, CLASS_IWINDOW_MANAGER, CLASS_WINDOW_MANAGER_FUNCS, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -125,17 +128,17 @@ public class PhoneWindowManagerHooks {
                 }
         );
 
-        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "setInitialDisplaySize",
+        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, loader, "setInitialDisplaySize",
                 Display.class, int.class, int.class, int.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                super.afterHookedMethod(param);
-                showNavBar();
-            }
-        });
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        super.afterHookedMethod(param);
+                        showNavBar();
+                    }
+                });
 
         final String CLASS_WINDOW_STATE = "android.view.WindowManagerPolicy$WindowState";
-        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, null, "layoutWindowLw", CLASS_WINDOW_STATE, CLASS_WINDOW_STATE, new XC_MethodHook() {
+        XposedHelpers.findAndHookMethod(CLASS_PHONE_WINDOW_MANAGER, loader, "layoutWindowLw", CLASS_WINDOW_STATE, CLASS_WINDOW_STATE, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 super.afterHookedMethod(param);

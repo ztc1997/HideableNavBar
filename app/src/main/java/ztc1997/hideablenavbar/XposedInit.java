@@ -39,16 +39,19 @@ public class XposedInit implements IXposedHookLoadPackage, IXposedHookZygoteInit
     private static String MODULE_PATH;
 
     private static int IC_HIDE_ID;
+
     public static int getIcHideId() {
         return IC_HIDE_ID;
     }
 
     private static int IC_HIDE_LAND_ID;
+
     public static int getIcHideLandIdId() {
         return IC_HIDE_LAND_ID;
     }
 
     private static int STRING_NAV_HIDE_ID;
+
     public static int getStringNavHideId() {
         return STRING_NAV_HIDE_ID;
     }
@@ -56,11 +59,6 @@ public class XposedInit implements IXposedHookLoadPackage, IXposedHookZygoteInit
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
         XposedBridge.log("Hideable Nav Bar: Version = " + BuildConfig.VERSION_CODE);
-        try {
-            PhoneWindowManagerHooks.doHook();
-        } catch (Exception e) {
-            log(TAG + e);
-        }
         MODULE_PATH = startupParam.modulePath;
     }
 
@@ -83,6 +81,11 @@ public class XposedInit implements IXposedHookLoadPackage, IXposedHookZygoteInit
             case "android":
                 try {
                     PointerEventDispatcherHooks.doHook(lpparam.classLoader);
+                } catch (Exception e) {
+                    log(TAG + e);
+                }
+                try {
+                    PhoneWindowManagerHooks.doHook(lpparam.classLoader);
                 } catch (Exception e) {
                     log(TAG + e);
                 }
