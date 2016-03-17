@@ -22,5 +22,9 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    //Xposed Bridge Api
+    provided fileTree(include: ['*.jar'], dir: 'lib')
+
     compile 'de.psdev.licensesdialog:licensesdialog:1.8.0'
 }
